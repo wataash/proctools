@@ -1,0 +1,131 @@
+.\"Copyright (c) 2001
+.\"     William B Faulk.  All rights reserved.
+.\"
+.\"Redistribution and use in source and binary forms, with or without
+.\"modification, are permitted provided that the following conditions
+.\"are met:
+.\"
+.\"1. Redistributions of source code must retain the above copyright
+.\"   notice, this list of conditions and the following disclaimer. 
+.\"2. Redistributions in binary form must reproduce the above copyright
+.\"   notice, this list of conditions and the following disclaimer in the
+.\"   documentation and/or other materials provided with the distribution. 
+.\"3. Neither the name of William B Faulk nor the names of his contributors
+.\"   may be used to endorse or promote products derived from this software
+.\"   without specific prior written permission. 
+.\"
+.\"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+.\"AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\"IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\"ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+.\"ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\"DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\"SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+.\"CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+.\"OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+.\"USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd May 21, 2001
+.Dt PGREP 1
+.Os
+.Sh NAME
+.Nm pgrep
+.Nd find processes
+.Sh SYNOPSIS
+.Nm pgrep
+.Op Fl flnvx
+.Op Fl d Ar delim
+.Op Fl g Ar pgrplist
+.Op Fl G Ar gidlist
+.Op Fl P Ar ppidlist
+.Op Fl t Ar termlist
+.Op Fl u Ar euidlist
+.Op Fl U Ar uidlist
+.Op Ar pattern
+.Sh DESCRIPTION
+The
+.Nm
+utility displays process IDs for those processes that match the requirements
+specified on the command line.  The process IDs are presented as decimal numbers
+separated by an optionally supplied delimiter, which defaults to a newline.
+The output can also optionally include the executable name of the process
+printed after the process ID separated by a space.
+.Pp
+Processes are matched if the
+.Ar pattern ,
+if given, matches the process's name, and the process matches any of the
+arguments given to all of the rest of the flags supplied on the command line.
+The arguments supplied to
+.Nm
+can be given as a comma and/or whitespace delimited list.
+When given no options,
+.Nm
+prints information about all user-mode processes.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl d Ar delim
+Use the specified delimiter to separate the process IDs instead of a newline.
+.It Fl f
+Match the pattern given against the full argument string of the process instead
+of just the executable name.
+.It Fl g Ar pgrplist
+Match only processes that exist within the process groups specified.
+.It Fl G Ar gidlist
+Match only processes whose real group ID is listed.  Group IDs can be specified
+as group names and numeric IDs.  Non-existant numeric IDs do not cause errors.
+.It Fl l
+Print the executable name of the process along with the process ID.
+.It Fl n
+Print only the latest process that matches the rest of the arguments.  That is,
+the process that has the most recent start time.
+.It Fl P Ar ppidlist
+Match only processes whose parent process ID is specified.
+.It Fl t Ar termlist
+Match only processes whose controlling terminal is specified.  Terminals can
+be specified as children of the /dev directory or, if starting with a leading
+slash (`/'), any currently mounted filename.  Filenames specified must be
+character devices.
+.It Fl u Ar euidlist
+Match only processes whose effective user ID is given.  User IDs can be
+specified as usernames and as numeric user IDs.
+.It Fl U Ar uidlist
+Match only processes whose real user ID is given.  User IDs can be specified as
+usernames and as numeric user IDs.
+.It Fl v
+Invert the matching algorithm to print information about process that do not
+match the given arguments.
+.It Fl x
+Make the pattern match be an exact match instead of a regular expression.
+.El
+.Sh EXAMPLES
+.Cm pgrep sendmail
+.Pp
+Prints the process IDs of all sendmail processes.
+.Pp
+.Cm pgrep -G daemon -v
+.Pp
+Prints the process IDs of all processes whose group ID is not daemon.
+.Pp
+.Cm pgrep -d, -u root sh
+.Pp
+Prints the process IDs of all shells whose effective user ID is root, separated
+by commas.
+.Sh SEE ALSO
+.Xr pkill 1 ,
+.Xr ps 1 ,
+.Xr regex 3
+.Sh HISTORY
+The
+.Nm
+command first appeared in Sun Solaris 7.
+.Sh BUGS
+The original Solaris pgrep could also match against session ID, but OpenBSD's
+session ID can fail to exist if the session leader exits.
+.Pp
+Also, the original Solaris version had only the deprecated
+.Fl signal
+option to specify what signal to send.  This version can also use the
+.Fl s Ar signal
+option, which subsumes the session ID match listed above.
+

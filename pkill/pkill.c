@@ -31,7 +31,7 @@
 #include <sysexits.h>
 #include <unistd.h>
 
-#include "proctools.h"
+#include "../proctools/proctools.h"
 
 static int signame_to_signum(char *);
 static void nosig(char *);

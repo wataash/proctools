@@ -1,16 +1,6 @@
-CFLAGS = -Wall -Wno-format -g
+SUBDIR= proctools pgrep pkill
+DPADD+= proctools/libproctools.a pgrep/pgrep pkill/pkill
 
-all: pgrep pkill
+beforeinstall: all
 
-pgrep: proctools.o pgrep.o
-	$(CC) $(CFLAGS) -o $@ $> -lkvm
-	sudo chgrp kmem pgrep
-	sudo chmod 2555 pgrep
-
-pkill: proctools.o pkill.o
-	$(CC) $(CFLAGS) -o $@ $> -lkvm
-	sudo chgrp kmem pkill
-	sudo chmod 2555 pkill
-
-clean:
-	rm -f *core *.o pgrep pkill
+.include <bsd.subdir.mk>

@@ -28,7 +28,7 @@
 #include <sysexits.h>
 #include <unistd.h>
 
-#include "proctools.h"
+#include "../proctools/proctools.h"
 
 static void usage();
 
