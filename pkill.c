@@ -92,7 +92,7 @@ main(argc, argv)
 					len = strlen(*argv) + 3;
 					if ((newarg = calloc(len, sizeof(char))) == NULL)
 						err(EX_OSERR, NULL);
-					snprintf(newarg, len, "-S%s", *argv);
+					snprintf(newarg, len, "-s%s", *argv);
 					--*argv;
 					*argv = newarg;
 				}
@@ -103,7 +103,7 @@ main(argc, argv)
 		argv--;
 	}
 
-	while ((ch = getopt(argc, argv, "fg:G:nP:s:S:t:u:U:vx")) != -1)
+	while ((ch = getopt(argc, argv, "fg:G:nP:s:t:u:U:vx")) != -1)
 		switch ((char)ch) {
 		case 'f':
 			fflag = TRUE;

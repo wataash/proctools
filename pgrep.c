@@ -59,7 +59,7 @@ main(argc, argv)
 	first = TRUE;
 	delim = NULL;
 
-	while ((ch = getopt(argc, argv, "d:fg:G:lnP:s:t:u:U:vx")) != -1)
+	while ((ch = getopt(argc, argv, "d:fg:G:lnP:t:u:U:vx")) != -1)
 		switch ((char)ch) {
 		case 'd':
 			if (delim != NULL)
@@ -85,11 +85,6 @@ main(argc, argv)
 		case 'P':
 			(void)parsePidList(optarg, &ppidl);
 			break;
-/*
-		case 's':
-			(void)parsePidList(optarg, &sidl);
-			break;
-*/
 		case 't':
 			(void)parseTermList(optarg, &terml);
 			break;
