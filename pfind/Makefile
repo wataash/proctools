@@ -1,7 +1,7 @@
-PROG=   pkill
+PROG= pfind
 DPADD+= ../proctools/libproctools.a
 LDADD= -L${MAKEOBJDIR} -lproctools -lkvm
-CLEANFILES+= pkill.cat1
+CLEANFILES+= pfind.cat1
 
 .if defined(OLDKVM)
 BINGRP= kmem

@@ -1,9 +1,12 @@
 LIB=	proctools
+SRCS= fmt.c proctools.c
 NOPROFILE=	yes
 NOPIC=	yes
 NOLINT=	yes
 
-SRCS=	proctools.c
+.if defined(OLDKVM)
+CFLAGS= -DUSE_KVM
+.endif
 
 install:
 

@@ -25,15 +25,21 @@
 .\"OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 .\"USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd May 21, 2001
-.Dt PGREP 1
-.Os
+.Dd 06 December 2003
+.Dt
+.ds dT PGREP
+.ds cH 1
+.ds vT proctools 0.4pre1
+.ds document-title PGREP
+.ds section 1
+.ds volume proctools 0.4pre1
+.ds operating-system
 .Sh NAME
 .Nm pgrep
 .Nd find processes
 .Sh SYNOPSIS
 .Nm pgrep
-.Op Fl flnvx
+.Op Fl filLnvVx
 .Op Fl d Ar delim
 .Op Fl g Ar pgrplist
 .Op Fl G Ar gidlist
@@ -48,8 +54,8 @@ The
 utility displays process IDs for those processes that match the requirements
 specified on the command line.  The process IDs are presented as decimal numbers
 separated by an optionally supplied delimiter, which defaults to a newline.
-The output can also optionally include the executable name of the process
-printed after the process ID separated by a space.
+The output can optionally include the executable name
+printed after the process ID, separated by a space.
 .Pp
 Processes are matched if the
 .Ar pattern ,
@@ -58,24 +64,27 @@ arguments given to all of the rest of the flags supplied on the command line.
 The arguments supplied to
 .Nm
 can be given as a comma and/or whitespace delimited list.
-When given no options,
-.Nm
-prints information about all user-mode processes.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl d Ar delim
 Use the specified delimiter to separate the process IDs instead of a newline.
 .It Fl f
-Match the pattern given against the full argument string of the process instead
+Match the
+.Ar pattern
+anywhere in the full argument string of the process instead
 of just the executable name.
 .It Fl g Ar pgrplist
 Match only processes that exist within the process groups specified.
 .It Fl G Ar gidlist
 Match only processes whose real group ID is listed.  Group IDs can be specified
-as group names and numeric IDs.  Non-existant numeric IDs do not cause errors.
+as group names and numeric IDs.  Non-existent numeric IDs do not cause errors.
+.It Fl i
+Use case-insensitive pattern matching.
 .It Fl l
 Print the executable name of the process along with the process ID.
+.It Fl L
+Print the full argument string of the process along with the process ID.
 .It Fl n
 Print only the latest process that matches the rest of the arguments.  That is,
 the process that has the most recent start time.
@@ -93,10 +102,34 @@ specified as usernames and as numeric user IDs.
 Match only processes whose real user ID is given.  User IDs can be specified as
 usernames and as numeric user IDs.
 .It Fl v
-Invert the matching algorithm to print information about process that do not
-match the given arguments.
+Invert the matching algorithm. Will print information about processes that do
+not match the given arguments.
+As an exception, combining the
+.Fl n
+option with the
+.Fl v
+option will not invert the
+.Ar pattern
+match (only flags will be inverted).
+.It Fl V
+Prints the
+.Nm
+version, then quits.
 .It Fl x
-Make the pattern match be an exact match instead of a regular expression.
+Treat the
+.Ar pattern
+as a literal string for exact (full-string) matching. Without this option,
+the default is to match as an extended regular expression.
+N.b. the Solaris
+.Nm pgrep
+performs regular expression matching in the presence of the
+.Fl x
+option. This behaviour is considered redundant in this
+.Nm
+implementation. The same effect may be achieved by avoiding the
+.Fl x
+option and instead using a pattern of the form
+.Ar ^(pattern)$ .
 .El
 .Sh EXAMPLES
 .Cm pgrep sendmail
@@ -111,21 +144,28 @@ Prints the process IDs of all processes whose group ID is not daemon.
 .Pp
 Prints the process IDs of all shells whose effective user ID is root, separated
 by commas.
+.so ../proctools/man.exits
+.so ../proctools/man.notes
+.so ../proctools/man.bugs
+.Pp
+Output with the
+.Fl L
+option may vary between operating systems.
+.Pp
+For the sysctl mode of operation (e.g. Darwin) the
+.Fl L
+option will list process belonging to other users but will be unable
+to display details of their arguments. A question mark and executable
+name (but not the argument string) will be displayed.
+(The Darwin
+.Nm ps
+can show arguments because it is setuid root.)
 .Sh SEE ALSO
 .Xr pkill 1 ,
 .Xr ps 1 ,
 .Xr regex 3
 .Sh HISTORY
-The
+The original
 .Nm
-command first appeared in Sun Solaris 7.
-.Sh BUGS
-The original Solaris pgrep could also match against session ID, but OpenBSD's
-session ID can fail to exist if the session leader exits.
-.Pp
-Also, the original Solaris version had only the deprecated
-.Fl signal
-option to specify what signal to send.  This version can also use the
-.Fl s Ar signal
-option, which subsumes the session ID match listed above.
-
+command appeared in Sun Solaris 7.
+.so ../proctools/man.authors

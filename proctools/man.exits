@@ -1,0 +1,18 @@
+.Sh RETURN VALUES
+The
+.Nm
+utility exits with one of the following values:
+.Bl -tag -width Ds
+.It 0 (EX_OK)
+One or more processes were matched.
+.It 1
+No processes were matched.
+.It 64 (EX_USAGE)
+Invalid command-line options were specified.
+.It 69 (EX_UNAVAILABLE)
+An unexpected error occurred.
+.It 70 (EX_SOFTWARE)
+A feature was not supported in the current environment.
+.It 71 (EX_OSERR)
+A transient error occurred.
+.El

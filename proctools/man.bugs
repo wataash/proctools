@@ -1,0 +1,11 @@
+.Sh BUGS
+The original Solaris
+.Nm
+could also match against session ID, but OpenBSD's
+session ID can fail to exist if the session leader exits.
+.Pp
+Also, the original Solaris version had only the deprecated
+.Fl signal
+option to specify what signal to send.  This version can also use the
+.Fl s Ar signal
+option, which subsumes the session ID match listed above.

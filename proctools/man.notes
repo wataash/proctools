@@ -1,0 +1,11 @@
+.Sh NOTES
+The current
+.Nm
+process will not consider itself to be a potential match. However, it is
+possible for a user to construct a shell pipeline that contains processes
+that will be matched by the
+.Ar pattern
+supplied to this tool. Some users might not anticipate this.
+.Pp
+The output of this tool should never be treated as accurate programmatic input
+(process arguments will have been escaped for safe printing on the terminal).

@@ -1,0 +1,548 @@
+.\"Copyright (c) 2003
+.\"     James Devenish.  All rights reserved.
+.\"
+.\"Redistribution and use in source and binary forms, with or without
+.\"modification, are permitted provided that the following conditions
+.\"are met:
+.\"
+.\"1. Redistributions of source code must retain the above copyright
+.\"   notice, this list of conditions and the following disclaimer. 
+.\"2. Redistributions in binary form must reproduce the above copyright
+.\"   notice, this list of conditions and the following disclaimer in the
+.\"   documentation and/or other materials provided with the distribution. 
+.\"3. Neither the name of James Devenish nor the names of his contributors
+.\"   may be used to endorse or promote products derived from this software
+.\"   without specific prior written permission. 
+.\"
+.\"THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+.\"AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\"IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\"ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+.\"ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\"DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+.\"SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+.\"CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+.\"OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+.\"USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd 06 December 2003
+.Dt
+.ds dT PFIND
+.ds cH 1
+.ds vT proctools 0.4pre1
+.ds document-title PFIND
+.ds section 1
+.ds volume proctools 0.4pre1
+.ds operating-system
+.Sh NAME
+.Nm pfind
+.Nd find processes
+.Sh SYNOPSIS
+.Nm pfind
+.Op Fl V
+.Op Fl S
+.Op Fl d Ar delim
+.Oo
+.Fl f Ar file
+|
+.Fl M Ar core
+.Oc
+.Op Fl i
+.Op Fl x
+.Op Ar expression
+.Sh DESCRIPTION
+The
+.Nm
+utility displays process IDs for those processes that match the given
+.Ar expression .
+The
+.Ar expression
+may be constructed from
+.Dq patterns ,
+.Dq primary expressions
+and
+.Dq operator expressions .
+A pattern is any arbitrary text argument that is used to match
+the executable name or arguments of a process.
+A pattern on its own is equivalent to a
+.Fl name
+expression.
+.\" not already recognised as a primary expression or operator expression.
+.Pp
+Options,
+which must be specified before the
+.Ar expression ,
+are:
+.Bl -tag -width Ds
+.It Fl d Ar delim
+Use the specified delimiter to separate the process IDs instead of a newline.
+.It Fl f Ar file
+Read process information from a platform-independent
+.Nm
+.Sq dump
+file instead of the running kernel.
+Some actions will be unsupported.
+.It Fl i
+Use case-insensitive pattern matching.
+.It Fl M Ar core
+Read process information from the given
+core
+instead of the running kernel.
+Some actions will be unsupported.
+.It Fl S
+Print the search strategy and decision-making details
+to the standard error file descriptor.
+.It Fl V
+Prints the
+.Nm
+version, then exits.
+.It Fl x
+Treat any
+.Ar pattern
+as a literal string for exact matching. Without this option, the default is to
+match as an extended regular expression. For names, a full-length match will
+be sought. For argument strings, the literal
+.Ar pattern
+may match any substring.
+.El
+.Pp
+The primary expressions for matching processes are:
+.Bl -tag -width Ds
+.It Fl any Ar pattern
+Equivalent to
+.Do 
+\&(
+.Fl name Ar pattern Fl or
+.Fl args Ar pattern
+\&)
+.Dc .
+.It Fl args Ar pattern
+Match the
+.Ar pattern
+against the full command line of the process (equivalent to
+.Fl full ) .
+Note: a process may have changed its command line during execution.
+.It Fl ask
+Write a prompt to the standard error descriptor, then read a character from
+standard input. If the input is 'Y', 'y' or the user presses
+.Sq enter ,
+this expression acts as a
+.Dq match .
+Otherwise, this expression acts as a
+.Dq non-match .
+.It Fl euid Ar euidlist
+Match only processes whose effective user ID is given (equivalent to
+.Fl user ) .
+User IDs an be specified as usernames and as numeric user IDs.
+.It Fl gid Ar gidlist
+Match only processes whose real group ID is listed (equivalent to
+.Fl group ) .
+Group IDs can be specified as group names and numeric IDs.
+Non-existent numeric IDs do not cause errors.
+.It Fl name Ar pattern
+The
+.Ar pattern
+is matched against the executable name of the process.
+See also the
+.Fl x
+option.
+.It Fl pgrp Ar pgrplist
+Match only processes that exist within the process groups specified.
+.It Fl ppid Ar ppidlist
+Match only processes whose parent process ID is specified
+(equivalent to
+.Fl parent ) .
+.It Fl term Ar termlist
+Match only processes whose controlling terminal is specified.  Terminals can
+be specified as children of the
+.Pa /dev
+directory or, if starting with a leading slash (`/'), any currently mounted
+filename.  Filenames specified must be character devices.
+.It Fl uid Ar uidlist
+Match only processes whose real user ID is given.
+User IDs an be specified as usernames and as numeric user IDs.
+.El
+.Pp
+The primary expressions for taking action on matched processes are:
+.Bl -tag -width Ds
+.It Fl dump Ar file
+Writes process information (about the process that is being considered
+at the time the expression is evaluated) to the named
+.Ar file .
+The information can be read back with the
+.Fl f
+option. Hopefully, only
+.Nm
+developers will ever need this expression. The file format is private to
+.Nm pfind
+and is probably not useful for anything else.
+.It Fl id
+Prints the process ID.
+This expression acts as a 'match' for all processes that
+matched any preceding expressions.
+This is also the default action for each process when
+.Fl print ,
+.Fl ps
+or
+.Fl result
+have not already been invoked.
+.It Fl kill Ar signal
+Sends the specified signal to any processes that are
+already matched.
+If the signal was sent, this expression acts as a match.
+If an error occurred, this expression acts as a non-match and
+an error message is printed.
+The signal may be specified by its name, with or without the prepended `SIG',
+or as a number.
+Signals need not be preceded with a minus sign, but it is allowed.
+The
+.Fl ps
+and
+.Fl dump
+actions will not work fully if it occurs after the process has
+terminated.
+.It Fl print
+Prints the executable name of the process along with the process ID.
+This expression acts as a 'match'.
+.It Fl ps
+Prints the full argument string of the process along with the process ID.
+This expression acts as a 'match'.
+.It Fl result Ar signal
+Sends the specified signal and waits for the process to terminate.
+The process ID and its exit code are printed.
+Specify signal 0 to wait for a process to terminate without actually sending a
+signal.
+The
+.Fl result
+and
+.Fl wait
+expressions should be considered
+.Sq experimental .
+If
+.Nm
+itself terminates unexpectedly (such as after SIGKILL), the monitored
+process might also be killed. It is also possible that
+.Nm
+will interrupt the normal flow of signals from the monitored process
+to its parent. Stopped processes are treated as errors.
+For further details, see
+.Fl kill .
+.It Fl timeout Ar interval
+Waits up to
+.Ar interval
+seconds for the matched process to terminate, then the process ID and its exit
+code are printed. The expression acts as a match in that case. If the interval
+elapses without the process terminating, this expression acts as a non-match
+and an error message is printed.
+The
+.Fl timeout
+expression should be considered
+.Sq experimental .
+If
+.Nm
+itself terminates unexpectedly (such as after SIGKILL), the monitored
+process might also be killed. It is also possible that
+.Nm
+will interrupt the normal flow of signals from the monitored process
+to its parent. Stopped processes are treated as errors.
+.It Fl wait Ar signal
+Sends the specified signal and waits for the process to terminate.
+Unlike
+.Fl result ,
+no output is produced when the process terminates. For further details, see
+.Fl result .
+.El
+.Pp
+Some primary expressions have synonyms:
+.Bl -tag -width Ds
+.It Fl full Ar pattern
+Equivalent to
+.Fl args .
+.It Fl details
+Equivalent to
+.Fl ps .
+.It Fl parent Ar ppidlist
+Equivalent to
+.Fl ppid .
+.It Fl group Ar gidlist
+Equivalent to
+.Fl gid .
+.It Fl s Ar signal
+Equivalent to
+.Fl kill .
+.It Fl then Ar signal
+Equivalent to
+.Fl kill .
+.It Fl user Ar euidlist
+Equivalent to
+.Fl euid .
+.El
+.Pp
+You may combine multiple primary expressions by forming
+operator expressions. The operator expressions are:
+.Bl -tag -width Ds
+.It Li \&( Ar expression Li \&)
+Acts as a
+.Sq match
+if the parenthesised (nested) expression was a match,
+otherwise acts as a
+.Sq non-match .
+.It Ar expression Fl and Ar expression
+Acts as a match if the first expression was a match and the second expression
+was also a match. If the first expression was a non-match, the second expression
+is not evaluated, and overall this operator expression will act as a non-match.
+.It Ar expression Ar expression
+The same as
+.Dq Ar expression Fl and Ar expression .
+.It Ar expression Fl or Ar expression
+Acts as a match if the first expression was a match\fI or\fR the first expression
+was a non-match and the second expression was a match. If the first
+expression was a match, the second expression is not evaluated, and overall
+this operator expression will act as a match.
+.It Fl not Ar expression
+The
+.Ar expression
+will be evaluated normally but the result will be inverted.
+.It Li ! Ar expression
+The same as
+.Dq Fl not Ar expression .
+.It Fl if
+Allows expressions to be evaluated on both success and failure of a previous
+expression. (The
+.Fl and
+and
+.Fl or
+expressions only allow further expression upon either success\fI or\fR
+failure, respectively.) The full syntax is
+.Do
+.Fl if Ar expression Fl do Ar expression
+.Fl else Ar expression Fl endif
+.Dc .
+Overall, an
+.Fl if
+expression evaluates as a
+.Sq match
+regardless of its inner expressions.
+.El
+.Pp
+Note that all expressions (primary expressions and operator expressions) are
+evaluated left-to-right and there is no other operator precedence. (The only
+exceptions are the
+.Fl not
+and
+.Fl if
+types of operator expressions.)
+.\" In the case of operator expressions, evaluation
+.\" ceases once the outcome is known. In the case of
+.\" .Dq Ar left -or Ar right ,
+.\" .Sq right
+.\" would only be evaluated if
+.\" .Sq left
+.\" had been a
+.\" .Dq non-match .
+.Sh EXAMPLES
+.Cm pfind \&.
+.Pp
+Prints the process IDs of all processes.
+.Pp
+.Cm pfind -d \&,
+.Pp
+Prints the process IDs of all processes, separated by commas.
+.Pp
+.Cm pfind -d
+.Pp
+Prints the process IDs of all processes whose names match
+.Dq -d ,
+believe it or not!
+.Pp
+.Cm pfind sendmail
+.Pp
+.Cm pfind -name sendmail
+.Pp
+.Cm pfind -args sendmail
+.Pp
+.Cm pfind -any sendmail
+.Pp
+Print the process IDs of all sendmail processes.
+.Pp
+.Cm pfind -not -gid daemon
+.Pp
+Prints the process IDs of all processes whose group ID is not daemon.
+.Pp
+.Cm pfind -d \&, -uid root sh
+.Pp
+Prints the process IDs of all shells whose effective user ID is root, separated
+by commas.
+.Pp
+.Cm pfind -d, -uid root sh
+.Pp
+Prints the process IDs of root-owned processes whose names match both
+.Sq sh
+and
+.Sq -d, .
+.Pp
+.Cm pfind '(' -uid root -or sh ')' -print
+.Pp
+.Cm pfind -if -uid root -or sh -do -print
+.Pp
+Match process that are either owned by root or match
+.Dq sh
+in their names, and print the IDs and names for all such processes.
+Print nothing for non-matched processes.
+.Pp
+.Cm pfind -uid root -or sh -print
+.Pp
+.Cm pfind -uid root -or '(' sh -print ')'
+.Pp
+Print the process IDs of all root's processes, and both the IDs and
+names for processes with names matching
+.Dq sh .
+.Pp
+.Cm pfind -user root -any perl -details -ask -then QUIT
+.Pp
+Matches 'perl' against the names and command lines of root's processes. For
+each process, prints the command line then asks you whether to send SIGQUIT.
+.Pp
+.Cm pfind -i -f filename sh
+.Pp
+Prints the IDs of all processes described in the file
+.Sq filename 
+whose names match
+.Sq sh ,
+.Sq \&Sh ,
+.Sq sH ,
+or
+.Sq SH .
+.Pp
+.Cm pfind -if filename sh
+.Pp
+Prints the IDs of all processes whose names match both the literal string
+.Sq filename 
+and the literal string
+.Sq sh .
+This is because
+.Sq -if
+is interpreted as the start of an
+.Fl if
+expression.
+.so ../proctools/man.exits
+.Sh CAVEATS
+.Nm
+evaluates expressions left-to-right without the operator precedence
+that users might intuitively expect. This saves
+.Nm
+from having to re-order expressions or enforce a strict grammar.
+So, be warned that
+.Fl and
+and
+.Fl or
+do not take precedence over other operataor expressions. Use
+brackets,
+.Fl if
+expressions and the
+.Fl S
+option whenever necessary.
+.Pp
+The
+.Ar expression
+is evaluated for each process sequentially. That is, processes
+are examined
+.Dq one after the other
+from a list that is generated at the start of each
+.Nm
+invocation.
+.Pp
+It is tempting to construct
+.Nm
+expressions that will match many processes and performs many actions.
+However, 
+.Nm
+suffers from the same flaw as any process examination tool: by the time the
+the PID information is collected, it is out-of-date. Therefore, one
+long-running expression may cause subsequent expressions to match new
+processes that have the same PIDs as old processes.
+.Pp
+The current
+.Nm
+process will not consider itself to be a potential match. However, it is
+possible for a user to construct a shell pipeline that contains processes
+that will be matched by the
+.Ar expression .
+Some users might not anticipate this.
+.Pp
+The output of this tool should never be treated as accurate programmatic input
+(process names and arguments will have been escaped for safe printing on the
+terminal).
+.Pp
+Unlike other
+.Nm proctools
+tools,
+.Nm
+does not use
+.Sq getopt
+argument parsing. This means that you may not combine separate options into a
+single argument, and arguments for the
+.Fl d
+and
+.Fl f
+options must follow as separate arguments.
+.Pp
+.Nm
+does not include a grammar checker. Therefore, it is highly likely that
+it will not produce any warnings about erroneous expressions. As a
+consequence, you can put an incomplete
+.Fl not
+expression at the end of a nested expression to invert it entirely.
+For example:
+.Pp
+.Cm pfind -if -user root -or -user daemon
+.Cm -not -do -id -else -kill 9 -endif
+.Pp
+The above command line prints the IDs of all root or daemon processes and kills all others.
+.Pp
+.Cm pfind -if -not '(' -user root -or -user daemon
+.Cm ')' -do -id -else -kill 9 -endif
+.Pp
+The above command line is a proper, but longer, equivalent to the previous command line.
+.Sh BUGS
+.Pp
+Output of the
+.Fl ps
+action may vary between operating systems.
+.Pp
+For the sysctl mode of operation (e.g. Darwin) the
+.Fl ps
+option will list process belonging to other users but will be unable
+to display details of their arguments. A question mark and executable
+name (but not the argument string) will be displayed.
+(The Darwin
+.Nm ps
+can only show arguments because it is setuid root.)
+.Pp
+Session ID is not a supported criterion.
+.Pp
+.Nm
+does not offer features that require the comparison of
+information among multiple processes. For example,
+.Nm
+has no equivalent for the
+.Nm pgrep
+.Fl n
+option.
+.Sh SEE ALSO
+.Xr pgrep 1 ,
+.Xr regex 3
+.Sh HISTORY
+The
+.Nm
+command was added in
+.Nm proctools
+version 0.4.
+.Sh AUTHORS
+Feedback may be sent to
+<j-devenish@users.sourceforge.net>.
+.Nm
+is based on
+.Nm proctools
+by <wfaulk@users.sourceforge.net>.
+The project homepage is at <http://proctools.sourceforge.net>.

@@ -1,5 +1,5 @@
 /*
- * pgrep [-flnvx] [-d <delim>] [-g <pgrplist>] [-G <gidlist>]
+ * pgrep [-filLnvVx] [-d <delim>] [-g <pgrplist>] [-G <gidlist>]
  *       [-P <ppidlist>] [-t <termlist>] [-u <euidlist>]
  *       [-U <uidlist>] [<pattern>]
  *
@@ -7,13 +7,16 @@
  *  -f : match against full name, not just executable name
  *  -g <pgrplist> : matches process groups
  *  -G <gidlist> : matches group IDs
+ *  -i : case-insensitive matching
  *  -l : long output (default is just pids)
+ *  -L : show all arguments (long long output)
  *  -n : matches only newest process that matches otherwise
  *  -P <ppidlist> : matches parent pids
  *  -t <termlist> : matches terminal
  *  -u <euidlist> : matches effective uids
  *  -U <uidlist> : matches real uids
  *  -v : invert match
+ *  -V : print version identifier
  *  -x : exact match (default regex)
  *
  *  <pattern> : regex (or exact string if -x) to match
@@ -22,7 +25,6 @@
 #include <sys/types.h>
 
 #include <err.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sysexits.h>
@@ -30,7 +32,9 @@
 
 #include "../proctools/proctools.h"
 
-static void usage();
+__dead static void usage();
+
+extern char *__progname;
 
 /*
  * pgrep matches processes specified by its arguments and prints them out
@@ -40,26 +44,30 @@ main(argc, argv)
 	int argc;
 	char *argv[];
 {
-	struct proclist *proclist, *temppl;
-	struct grouplist *gidl;
+	int fflag, iflag, lflag, Lflag, nflag, vflag, xflag, first, ch;
 	struct pidlist *pgroupl, *ppidl, *sidl;
-	struct termlist *terml;
+	struct proctoolslist *proctoolslist, *temppl;
 	struct uidlist *euidl, *uidl;
-	int ch;
-	int fflag, lflag, nflag, vflag, xflag;
-	int first;
-	char *delim;
+	struct baton *baton;
+	char *delim, *formatstr;
+	struct grouplist *gidl;
+	struct termlist *terml;
 
-	proclist = NULL;
+	if (argc < 2) {
+		(void)fprintf(stderr, "%s: no matching criteria specified\n", __progname);
+		usage();
+	}
+
+	proctoolslist = NULL;
 	gidl = NULL;
 	pgroupl = ppidl = sidl = NULL;
 	terml = NULL;
 	euidl = uidl = NULL;
-	fflag = lflag = xflag = nflag = vflag = FALSE;
+	fflag = iflag = lflag = Lflag = xflag = nflag = vflag = FALSE;
 	first = TRUE;
 	delim = NULL;
 
-	while ((ch = getopt(argc, argv, "d:fg:G:lnP:t:u:U:vx")) != -1)
+	while ((ch = getopt(argc, argv, "d:fg:G:ilLnP:t:u:U:vVx")) != -1)
 		switch ((char)ch) {
 		case 'd':
 			if (delim != NULL)
@@ -76,8 +84,14 @@ main(argc, argv)
 		case 'G':
 			(void)parseGroupList(optarg, &gidl);
 			break;
+		case 'i':
+			iflag = TRUE;
+			break;
 		case 'l':
 			lflag = TRUE;
+			break;
+		case 'L':
+			Lflag = TRUE;
 			break;
 		case 'n':
 			nflag = TRUE;
@@ -97,6 +111,10 @@ main(argc, argv)
 		case 'v':
 			vflag = TRUE;
 			break;
+		case 'V':
+			(void)fprintf(stderr, "%s (proctools " VERSION ") http://proctools.sourceforge.net\n", __progname);
+			exit(EX_OK);
+			/* NOTREACHED */
 		case 'x':
 			xflag = TRUE;
 			break;
@@ -113,32 +131,42 @@ main(argc, argv)
 		usage();
 	}
 
-	getProcList(&proclist, euidl, uidl, gidl, ppidl, pgroupl, terml, fflag, nflag, vflag, xflag, ((argc > 0)?argv[0]:NULL));
+	if (fflag && lflag)
+		Lflag = TRUE;
 
-	temppl = proclist;
+	if (lflag || Lflag)
+		formatstr = "%s%5d%s%s";
+	else
+		formatstr = "%s%d%s%s";
+
+	baton = getProcList(NULL, &proctoolslist, euidl, uidl, gidl, ppidl, pgroupl, terml, fflag, iflag, nflag, vflag, xflag, ((argc > 0)?argv[0]:NULL));
+
+	temppl = proctoolslist;
 	while (temppl != NULL) {
-		printf("%s%d%s%s", (first?(first = FALSE, ""):(delim != NULL?delim:"\n")), temppl->pid, (lflag?" ":""), (lflag?temppl->name:""));
+		printf(formatstr, (first?(first = FALSE, ""):(delim != NULL?delim:"\n")), temppl->pid, ((Lflag || lflag)?" ":""), ((lflag && !Lflag)?temppl->name:""));
+		if (Lflag && baton != NULL)
+			printProcInfo(baton, temppl);
 		temppl = temppl->next;
 	}
+
+	freeProcList(baton);
 
 	if (!first)
 		printf("\n");
 
-	return (1);
+	return proctoolslist == NULL ? 1 : EX_OK;
 }
 
-void
+__dead static void
 usage()
 {
-	extern char *__progname;
-
-	(void)fprintf(stderr, "Usage: %s [-flnvx] [-d <delim>] [-g <pgrplist>] [-G <gidlist>] [-P <ppidlist>] [-t <termlist>] [-u <euidlist>] [-U <uidlist>] [<pattern>]\n", __progname);
+	(void)fprintf(stderr, "Usage: %s [-filLnvVx] [-d <delim>] [-g <pgrplist>] [-G <gidlist>] [-P <ppidlist>] [-t <termlist>] [-u <euidlist>] [-U <uidlist>] [<pattern>]\n", __progname);
 	exit(EX_USAGE);
 }
 
 /*
- * Copyright (c) 2001
- *      William B Faulk.  All rights reserved.
+ * Copyright (c) 2001 William B Faulk.  All rights reserved.
+ * Copyright (c) 2003 James Devenish.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
