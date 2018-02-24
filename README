@@ -6,7 +6,7 @@ processes.
 
 The project homepage is <http://sourceforge.net/projects/proctools>. The
 proctools are distributed under the terms of the BSD license. Feedback may
-be sent to j-devenish and wfalk at the users.sourceforge.net e-mail domain.
+be sent to j-devenish and wfaulk at the users.sourceforge.net e-mail domain.
 
 Proctools provides three executables and three man pages. To compile for
 OpenBSD, run `make .MAIN install`. If your OpenBSD is old and compilation
