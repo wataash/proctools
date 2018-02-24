@@ -1,6 +1,6 @@
 PROG=   pkill
 DPADD+= ../proctools/libproctools.a
-LDADD= -L${MAKEOBJDIR} -lproctools -lkvm
+LDADD= -L${MAKEOBJDIR} -lproctools
 CLEANFILES+= pkill.cat1
 
 .if defined(OLDKVM)

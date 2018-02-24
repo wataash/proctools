@@ -23,7 +23,10 @@
 
 extern char *cmdpart(char *);
 extern void  fmt_puts(char *, int *);
+
+#if defined(USE_KVM)
 extern void  fmt_argv(kvm_t *kd, struct kinfo_proc *ki);
+#endif
 
 static char  dbuf[DUMPBUFSZ];
 
@@ -919,7 +922,7 @@ getProcList(corefile, proctoolslist, euidlist, uidlist, gidlist, ppidlist, pgrou
 								matched = !strcmp(name, pattern);
 						}
 						else {
-							matched = regexec(&regex, name, 0, NULL, NULL) == 0;
+							matched = regexec(&regex, name, 0, NULL, 0) == 0;
 						}
 					}
 					else {
@@ -960,7 +963,7 @@ getProcList(corefile, proctoolslist, euidlist, uidlist, gidlist, ppidlist, pgrou
 						}
 					}
 					else
-						if (regexec(&regex, name, 0, NULL, NULL) == 0)
+						if (regexec(&regex, name, 0, NULL, 0) == 0)
 							pushProcList(proctoolslist, kp);
 				}
 				else
@@ -995,7 +998,7 @@ getProcList(corefile, proctoolslist, euidlist, uidlist, gidlist, ppidlist, pgrou
 								matched = !strcmp(name, pattern);
 						}
 						else {
-							matched = regexec(&regex, name, 0, NULL, NULL) == 0;
+							matched = regexec(&regex, name, 0, NULL, 0) == 0;
 						}
 					}
 					else {
@@ -1037,7 +1040,7 @@ getProcList(corefile, proctoolslist, euidlist, uidlist, gidlist, ppidlist, pgrou
 						}
 					}
 					else
-						if (regexec(&regex, name, 0, NULL, NULL) == REG_NOMATCH)
+						if (regexec(&regex, name, 0, NULL, 0) == REG_NOMATCH)
 							pushProcList(proctoolslist, kp);
 				}
 				else

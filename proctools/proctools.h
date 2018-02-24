@@ -5,7 +5,12 @@
 
 #include <sys/cdefs.h>
 #include <stdio.h>
+
+#if defined(USE_KVM)
 #include <kvm.h>
+#else
+#define USE_SYSCTL
+#endif
 
 #if !defined(USE_KVM) && !defined(USE_SYSCTL)
 #	if defined(KVM_NO_FILES)

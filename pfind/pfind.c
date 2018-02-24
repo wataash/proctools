@@ -434,11 +434,11 @@ PFIND_EVAL(pfind_op_endif)
 PFIND_EVAL(pfind_pri_any)
 {
 	int result;
-	result = !regexec(&(*expression)->optarg.re.r, proctoolslist->name, 0, NULL, NULL);
+	result = !regexec(&(*expression)->optarg.re.r, proctoolslist->name, 0, NULL, 0);
 	if (!result) {
 		const char *args;
 		args = getProcArgs(baton, proctoolslist);
-		result = args && !regexec(&(*expression)->optarg.re.r, args, 0, NULL, NULL);
+		result = args && !regexec(&(*expression)->optarg.re.r, args, 0, NULL, 0);
 		/* do not free(args) */
 	}
 	(*expression)->parent->result = (*expression)->result = (*expression)->invert_after ^ result;
@@ -450,7 +450,7 @@ PFIND_EVAL(pfind_pri_args)
 	const char *args;
 	int result;
 	args = getProcArgs(baton, proctoolslist);
-	result = args && !regexec(&(*expression)->optarg.re.r, args, 0, NULL, NULL);
+	result = args && !regexec(&(*expression)->optarg.re.r, args, 0, NULL, 0);
 	(*expression)->parent->result = (*expression)->result = (*expression)->invert_after ^ result;
 	/* do not free(args) */
 	return 0;
@@ -490,7 +490,7 @@ PFIND_EVAL(pfind_pri_name)
 			(*expression)->parent->result = (*expression)->result = (*expression)->invert_after ^ !strcmp(proctoolslist->name, (*expression)->optarg.str);
 	}
 	else {
-		(*expression)->parent->result = (*expression)->result = (*expression)->invert_after ^ !regexec(&(*expression)->optarg.re.r, proctoolslist->name, 0, NULL, NULL);
+		(*expression)->parent->result = (*expression)->result = (*expression)->invert_after ^ !regexec(&(*expression)->optarg.re.r, proctoolslist->name, 0, NULL, 0);
 	}
 	return 0;
 }
