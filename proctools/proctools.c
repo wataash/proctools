@@ -874,16 +874,7 @@ getProcList(corefile, proctoolslist, euidlist, uidlist, gidlist, ppidlist, pgrou
 	baton->kp = kp;
 #endif
 
-	if (pattern == NULL && !lastonly) {
-		/* special case: return all processes other than this one */
-		for (i = nproc; --i >= 0; ++kp) {
-			kpi = *kp;
-			if (kpi.kp_proc.p_pid == getpid())
-				continue;
-			pushProcList(proctoolslist, kp);
-		}
-	}
-	else {
+	{
 		for (i = nproc; --i >= 0; ++kp) {
 			kpi = *kp;
 			if (kpi.kp_proc.p_pid == getpid())
