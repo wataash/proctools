@@ -874,179 +874,177 @@ getProcList(corefile, proctoolslist, euidlist, uidlist, gidlist, ppidlist, pgrou
 	baton->kp = kp;
 #endif
 
-	{
-		for (i = nproc; --i >= 0; ++kp) {
-			kpi = *kp;
-			if (kpi.kp_proc.p_pid == getpid())
-				continue;
-			match = (matchPidList(pgrouplist, kpi.kp_eproc.e_pgid) &&
-				matchGroupList(gidlist, kpi.kp_eproc.e_ucred.cr_gid) &&
-				matchPidList(ppidlist, kpi.kp_eproc.e_ppid) &&
-				matchTermList(termlist, kpi.kp_eproc.e_tdev) &&
-				matchUidList(euidlist, kpi.kp_eproc.e_pcred.p_svuid) &&
-				matchUidList(uidlist, kpi.kp_eproc.e_pcred.p_ruid));
-			extmatch = pgrouplist || gidlist || ppidlist || termlist || euidlist || uidlist;
-			if (match && !invert) {
-				if (fullmatch) {
-					if ((name = strdup(procArgs(baton, kp))) == NULL)
-						err(EX_OSERR, NULL);
-				}
-				else {
-					if ((name = strdup(kpi.kp_proc.p_comm)) == NULL)
-						err(EX_OSERR, NULL);
-				}
-				if (lastonly) {
-					struct timeval *start;
-					int matched;
-#if defined(USE_KVM)
-					start = &kpi.kp_eproc.e_pstats.p_start;
-#elif defined(p_starttime)
-					start = &kpi.kp_proc.p_starttime;
-#else
-					errx(EX_SOFTWARE, "lastonly not supported for sysctl");
-#endif
-					if (pattern != NULL) {
-						if (exact) {
-							if (ignorecase)
-								matched = !strcasecmp(name, pattern);
-							else
-								matched = !strcmp(name, pattern);
-						}
-						else {
-							matched = regexec(&regex, name, 0, NULL, 0) == 0;
-						}
-					}
-					else {
-						matched = TRUE;
-					}
-
-					if (matched) {
-						if (!latest.valid) {
-							latest.valid = TRUE;
-							latest.kp = kp;
-							latest.time.tv_sec = start->tv_sec;
-							latest.time.tv_usec = start->tv_usec;
-							if ((latest.name = strdup(kpi.kp_proc.p_comm)) == NULL)
-								err(EX_OSERR, NULL);
-							latest.pid = kpi.kp_proc.p_pid;
-						}
-						else
-						if ((start->tv_sec > latest.time.tv_sec) || ((start->tv_sec == latest.time.tv_sec) && (start->tv_usec > latest.time.tv_usec))) {
-							latest.time.tv_sec = start->tv_sec;
-							latest.time.tv_usec = start->tv_usec;
-							free(latest.name);
-							if ((latest.name = strdup(kpi.kp_proc.p_comm)) == NULL)
-								err(EX_OSERR, NULL);
-							latest.pid = kpi.kp_proc.p_pid;
-						}
-					}
-				}
-				else
-				if (pattern != NULL) {
-					if (exact) {
-						if (ignorecase) {
-							if (strcasecmp(name, pattern) == 0)
-								pushProcList(proctoolslist, kp);
-						}
-						else {
-							if (strcmp(name, pattern) == 0)
-								pushProcList(proctoolslist, kp);
-						}
-					}
-					else
-						if (regexec(&regex, name, 0, NULL, 0) == 0)
-							pushProcList(proctoolslist, kp);
-				}
-				else
-					pushProcList(proctoolslist, kp);
-				free(name);
-			}
-			else
-			if ((!match && invert) || (match && !extmatch && invert)) {
-				if (fullmatch) {
-					if ((name = strdup(procArgs(baton, kp))) == NULL)
-						err(EX_OSERR, NULL);
-				}
-				else {
-					if ((name = strdup(kpi.kp_proc.p_comm)) == NULL)
-						err(EX_OSERR, NULL);
-				}
-				if (lastonly) {
-					struct timeval *start;
-					int matched;
-#if defined(USE_KVM)
-					start = &kpi.kp_eproc.e_pstats.p_start;
-#elif defined(p_starttime)
-					start = &kpi.kp_proc.p_starttime;
-#else
-					errx(EX_SOFTWARE, "lastonly not supported for sysctl");
-#endif
-					if (pattern != NULL) {
-						if (exact) {
-							if (ignorecase)
-								matched = !strcasecmp(name, pattern);
-							else
-								matched = !strcmp(name, pattern);
-						}
-						else {
-							matched = regexec(&regex, name, 0, NULL, 0) == 0;
-						}
-					}
-					else {
-						matched = TRUE;
-					}
-
-					if (matched) {
-						if (!latest.valid) {
-							latest.valid = TRUE;
-							latest.kp = kp;
-							latest.time.tv_sec = start->tv_sec;
-							latest.time.tv_usec = start->tv_usec;
-							if ((latest.name = strdup(kpi.kp_proc.p_comm)) == NULL)
-								err(EX_OSERR, NULL);
-							latest.pid = kpi.kp_proc.p_pid;
-						}
-						else
-						if ((start->tv_sec > latest.time.tv_sec) || ((start->tv_sec == latest.time.tv_sec) && (start->tv_usec > latest.time.tv_usec))) {
-							latest.time.tv_sec = start->tv_sec;
-							latest.time.tv_usec = start->tv_usec;
-							free(latest.name);
-							if ((latest.name = strdup(kpi.kp_proc.p_comm)) == NULL)
-								err(EX_OSERR, NULL);
-							latest.pid = kpi.kp_proc.p_pid;
-						}
-						pushProcList(proctoolslist, kp);
-					}
-				}
-				else
-				if (pattern != NULL) {
-					if (exact) {
-						if (ignorecase) {
-							if (strcasecmp(name, pattern) == 0)
-								pushProcList(proctoolslist, kp);
-						}
-						else {
-							if (strcmp(name, pattern) == 0)
-								pushProcList(proctoolslist, kp);
-						}
-					}
-					else
-						if (regexec(&regex, name, 0, NULL, 0) == REG_NOMATCH)
-							pushProcList(proctoolslist, kp);
-				}
-				else
-					pushProcList(proctoolslist, kp);
-				free(name);
-			}
-		}
-
-		if (lastonly && latest.valid) {
-			if (invert) {
-				popProcList(proctoolslist, latest.pid);
+	for (i = nproc; --i >= 0; ++kp) {
+		kpi = *kp;
+		if (kpi.kp_proc.p_pid == getpid())
+			continue;
+		match = (matchPidList(pgrouplist, kpi.kp_eproc.e_pgid) &&
+			matchGroupList(gidlist, kpi.kp_eproc.e_ucred.cr_gid) &&
+			matchPidList(ppidlist, kpi.kp_eproc.e_ppid) &&
+			matchTermList(termlist, kpi.kp_eproc.e_tdev) &&
+			matchUidList(euidlist, kpi.kp_eproc.e_pcred.p_svuid) &&
+			matchUidList(uidlist, kpi.kp_eproc.e_pcred.p_ruid));
+		extmatch = pgrouplist || gidlist || ppidlist || termlist || euidlist || uidlist;
+		if (match && !invert) {
+			if (fullmatch) {
+				if ((name = strdup(procArgs(baton, kp))) == NULL)
+					err(EX_OSERR, NULL);
 			}
 			else {
-				pushProcListDetails(proctoolslist, latest.kp, latest.pid, latest.name);
+				if ((name = strdup(kpi.kp_proc.p_comm)) == NULL)
+					err(EX_OSERR, NULL);
 			}
+			if (lastonly) {
+				struct timeval *start;
+				int matched;
+#if defined(USE_KVM)
+				start = &kpi.kp_eproc.e_pstats.p_start;
+#elif defined(p_starttime)
+				start = &kpi.kp_proc.p_starttime;
+#else
+				errx(EX_SOFTWARE, "lastonly not supported for sysctl");
+#endif
+				if (pattern != NULL) {
+					if (exact) {
+						if (ignorecase)
+							matched = !strcasecmp(name, pattern);
+						else
+							matched = !strcmp(name, pattern);
+					}
+					else {
+						matched = regexec(&regex, name, 0, NULL, 0) == 0;
+					}
+				}
+				else {
+					matched = TRUE;
+				}
+
+				if (matched) {
+					if (!latest.valid) {
+						latest.valid = TRUE;
+						latest.kp = kp;
+						latest.time.tv_sec = start->tv_sec;
+						latest.time.tv_usec = start->tv_usec;
+						if ((latest.name = strdup(kpi.kp_proc.p_comm)) == NULL)
+							err(EX_OSERR, NULL);
+						latest.pid = kpi.kp_proc.p_pid;
+					}
+					else
+					if ((start->tv_sec > latest.time.tv_sec) || ((start->tv_sec == latest.time.tv_sec) && (start->tv_usec > latest.time.tv_usec))) {
+						latest.time.tv_sec = start->tv_sec;
+						latest.time.tv_usec = start->tv_usec;
+						free(latest.name);
+						if ((latest.name = strdup(kpi.kp_proc.p_comm)) == NULL)
+							err(EX_OSERR, NULL);
+						latest.pid = kpi.kp_proc.p_pid;
+					}
+				}
+			}
+			else
+			if (pattern != NULL) {
+				if (exact) {
+					if (ignorecase) {
+						if (strcasecmp(name, pattern) == 0)
+							pushProcList(proctoolslist, kp);
+					}
+					else {
+						if (strcmp(name, pattern) == 0)
+							pushProcList(proctoolslist, kp);
+					}
+				}
+				else
+					if (regexec(&regex, name, 0, NULL, 0) == 0)
+						pushProcList(proctoolslist, kp);
+			}
+			else
+				pushProcList(proctoolslist, kp);
+			free(name);
+		}
+		else
+		if ((!match && invert) || (match && !extmatch && invert)) {
+			if (fullmatch) {
+				if ((name = strdup(procArgs(baton, kp))) == NULL)
+					err(EX_OSERR, NULL);
+			}
+			else {
+				if ((name = strdup(kpi.kp_proc.p_comm)) == NULL)
+					err(EX_OSERR, NULL);
+			}
+			if (lastonly) {
+				struct timeval *start;
+				int matched;
+#if defined(USE_KVM)
+				start = &kpi.kp_eproc.e_pstats.p_start;
+#elif defined(p_starttime)
+				start = &kpi.kp_proc.p_starttime;
+#else
+				errx(EX_SOFTWARE, "lastonly not supported for sysctl");
+#endif
+				if (pattern != NULL) {
+					if (exact) {
+						if (ignorecase)
+							matched = !strcasecmp(name, pattern);
+						else
+							matched = !strcmp(name, pattern);
+					}
+					else {
+						matched = regexec(&regex, name, 0, NULL, 0) == 0;
+					}
+				}
+				else {
+					matched = TRUE;
+				}
+
+				if (matched) {
+					if (!latest.valid) {
+						latest.valid = TRUE;
+						latest.kp = kp;
+						latest.time.tv_sec = start->tv_sec;
+						latest.time.tv_usec = start->tv_usec;
+						if ((latest.name = strdup(kpi.kp_proc.p_comm)) == NULL)
+							err(EX_OSERR, NULL);
+						latest.pid = kpi.kp_proc.p_pid;
+					}
+					else
+					if ((start->tv_sec > latest.time.tv_sec) || ((start->tv_sec == latest.time.tv_sec) && (start->tv_usec > latest.time.tv_usec))) {
+						latest.time.tv_sec = start->tv_sec;
+						latest.time.tv_usec = start->tv_usec;
+						free(latest.name);
+						if ((latest.name = strdup(kpi.kp_proc.p_comm)) == NULL)
+							err(EX_OSERR, NULL);
+						latest.pid = kpi.kp_proc.p_pid;
+					}
+					pushProcList(proctoolslist, kp);
+				}
+			}
+			else
+			if (pattern != NULL) {
+				if (exact) {
+					if (ignorecase) {
+						if (strcasecmp(name, pattern) == 0)
+							pushProcList(proctoolslist, kp);
+					}
+					else {
+						if (strcmp(name, pattern) == 0)
+							pushProcList(proctoolslist, kp);
+					}
+				}
+				else
+					if (regexec(&regex, name, 0, NULL, 0) == REG_NOMATCH)
+						pushProcList(proctoolslist, kp);
+			}
+			else
+				pushProcList(proctoolslist, kp);
+			free(name);
+		}
+	}
+
+	if (lastonly && latest.valid) {
+		if (invert) {
+			popProcList(proctoolslist, latest.pid);
+		}
+		else {
+			pushProcListDetails(proctoolslist, latest.kp, latest.pid, latest.name);
 		}
 	}
 
