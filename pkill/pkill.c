@@ -72,7 +72,7 @@ main(argc, argv)
 	numsig = SIGTERM;
 	newarg = NULL;
 
-	if (argc > 1) {
+	if (argc > 1) { // redundant
 		argv++;
 		if (**argv == '-') {
 			++*argv;
